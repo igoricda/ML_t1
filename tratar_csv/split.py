@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # 1. Carregar o dataset original
-df = pd.read_csv('fifa_previsao_ajustado.csv')
+df = pd.read_csv('./dataset_original/fifa_previsao_ajustado.csv')
 
 # 2. Realizar a divisão (80% treino, 10% validação, 10% teste)
 # Primeiro, separamos o Treino (80%) do resto (20%)
