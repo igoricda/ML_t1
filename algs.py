@@ -13,6 +13,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
 df = pd.read_csv('fifa_previsao_ajustado.csv')
 
 plt.figure(figsize=(12, 9))
@@ -28,13 +36,6 @@ sns.scatterplot(
 plt.title('Dispersão das amostras de acordo com as classes originais')
 plt.show()
 
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 
 """Bagunçando os dados e separando os vetores de características das classes"""
 

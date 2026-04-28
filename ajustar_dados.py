@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 # Carregar a base de dados
 df = pd.read_csv('fifa_irl_data.csv')
@@ -26,8 +27,22 @@ def map_position(pos):
 
 df['position_num'] = df['position_main'].apply(map_position)
 
+
+
+# Dicionário para armazenar as respostas
+
+league_levels = {}
+df_ligas = pd.read_csv('relacao_ligas.csv')
+dict_ligas = dict(zip(df_ligas['league_id'], df_ligas['league_level']))
+
+df['league_level'] = df['league_id'].map(dict_ligas)
+df = df.drop(columns=['league_id'])
+
 #Definir estatísticas para NÃO incluir no target
 cols_to_drop = [
+    'fifa_version',
+    'league_id',
+    'club_team_id'
     'fifa_version',
     'short_name',
     'long_name',
@@ -63,7 +78,8 @@ cols_to_drop = [
     'born_fifa',
     'season',
     'player',
-    'Playing Time_90s',
+    'Playing Time_Min',
+    'Playing Time_Starts',
     'league',
     'team',
     'nation',

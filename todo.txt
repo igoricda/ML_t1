@@ -1,0 +1,21 @@
+tirar time
+colocar nível da liga
+
+shuffle dataset
+train 50 test 25 val split
+
+val - hyperparam
+teste no melhor val
+
+
+knn
+nbayes
+mlp
+svm
+ad
+
+melhores - teoria
+rforest
+bagging
+boosting
+
