@@ -1,10 +1,6 @@
-tirar time
-colocar nível da liga
 
-shuffle dataset
-train 50 test 25 val split
 
-val - hyperparam
+val - testar hyperparam
 teste no melhor val
 
 
