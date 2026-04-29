@@ -14,7 +14,7 @@ import numpy as np
 import seaborn as sns
 
 from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, PredefinedSplit
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -22,6 +22,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.model_selection import GridSearchCV
 
 df_treino= pd.read_csv('./split/treino.csv')
 df_teste = pd.read_csv('./split/teste.csv')
@@ -44,155 +45,94 @@ x_treino = scaler.fit_transform(x_treino)
 x_teste = scaler.transform(x_teste)
 x_val = scaler.transform(x_val)
 
-KNN = KNeighborsRegressor()
-KNN.fit(x_treino,y_treino)
-opiniao = KNN.predict(x_teste)
-
-erro_medio = mean_absolute_error(y_teste, opiniao)
-r2 = r2_score(y_teste, opiniao)
-
-print("Erro Médio = ", erro_medio)
-print("R2 Score = ", r2)
+x_combined = np.vstack((x_treino, x_val))
+y_combined = np.hstack((y_treino, y_val))
 
 
-
-#atribuindo valores aos hiperparâmetros
-#n_neighbors corresponde ao tamanho da vizinhança
-#weights indica se os vizinhos terão pesos diferentes ou não. Pode assumir os valores uniform ou distante (ou callabe)
-
-
-KNN = KNeighborsRegressor(n_neighbors=11)
-KNN.fit(x_treino,y_treino)
-opiniao = KNN.predict(x_teste)
-erro_medio = mean_absolute_error(y_teste, opiniao)
-r2 = r2_score(y_teste, opiniao)
-
-print("Erro Médio = ", erro_medio)
-print("R2 Score = ", r2)
+test_fold = np.zeros(x_combined.shape[0])
+test_fold[:len(x_treino)] = -1  # treino indices
+test_fold[len(x_treino):] = 0   # Validation indices
 
 
-"""**Atribuindo valores aos hiperparâmetros de forma explícita**
-
-n_neighbors corresponde ao tamanho da vizinhança
-
-weights indica se os vizinhos terão pesos diferentes ou não. Pode assumir os valores uniform ou distante (ou callabe)
-"""
-
-KNN = KNeighborsRegressor(n_neighbors=3,weights='distance')
-KNN.fit(x_treino,y_treino)
-opiniao = KNN.predict(x_teste)
-erro_medio = mean_absolute_error(y_teste, opiniao)
-r2 = r2_score(y_teste, opiniao)
-
-print("Erro Médio = ", erro_medio)
-print("R2 Score = ", r2)
-
-"""**Usando a regra do cotovelo para encontrar o melhor K**
-
-Neste processo, emprega-se o conjunto de validação
-"""
-
-erro_medio_v = []
-for i in range (1,51):
-  KNN = KNeighborsRegressor(n_neighbors=i,weights="distance")
-  KNN.fit(x_treino,y_treino)
-  opiniao = KNN.predict(x_val)
-  erro_medio_v.append(mean_absolute_error(y_val, opiniao))
-  print("K: ",i," mae: ",mean_absolute_error(y_val, opiniao))
-
-print("\n\nVetor de Erros")
-print(erro_medio_v)
+ps = PredefinedSplit(test_fold)
 
 
-melhor_k=np.argmin(erro_medio_v)
-print("\nMelhor K:", melhor_k,"\n\n")
+# Define the parameter grid
+param_grid = {
+    'n_neighbors': [i for i in range (1, 61)],
+    'weights': ['uniform', 'distance'],
+    'metric': ['euclidean', 'manhattan'],
+    'algorithm' : ['ball_tree', 'kd_tree'],
+                   
+}
 
-#aplica-se o K encontrado em um KNN sobre o conjunto de teste
-KNN = KNeighborsRegressor(n_neighbors=melhor_k,weights="distance")
-KNN.fit(x_treino,y_treino)
-opiniao = KNN.predict(x_teste)
-erro_medio = mean_absolute_error(y_teste, opiniao)
-r2 = r2_score(y_teste, opiniao)
+# Create the GridSearchCV object
+grid_search = GridSearchCV(KNeighborsRegressor(), param_grid, cv=ps, n_jobs = -1, scoring='neg_mean_absolute_error',
+)
 
-print("Erro Médio = ", erro_medio)
-print("R2 Score = ", r2)
+# Fit the grid search
+grid_search.fit(x_combined, y_combined)
 
-"""**Encontrando a melhor configuração de hiperparâmetros**
+# Print the best parameters and score
+print("Best parameters:", grid_search.best_params_)
+print("Best cross-validation score:", grid_search.best_score_)
 
-Neste exemplo, vamos empregar a estratégia de gridsearch
-"""
-
-menormae = 150
-for j in ("distance","uniform"):
-  for i in range (1,51):
-    KNN = KNeighborsRegressor(n_neighbors=i,weights=j)
-    KNN.fit(x_treino,y_treino)
-    opiniao = KNN.predict(x_teste)
-    mae = mean_absolute_error(y_teste, opiniao)
-
-    print("K: ",i," Métrica: ",j," mae: ",mae)
-    if (mae < menormae):
-      menormae = mae
-      melhor_modelo = KNN
-      print(f"\033[91mmelhorou\033[0m")
-
+#exit()
+melhor_modelo = grid_search.best_estimator_
 print("\nMelhor configuração para o KNN")
 print(melhor_modelo.get_params())
 print("\nMelhor configuração:")
 print("K: ",melhor_modelo.n_neighbors)
 print("Weights: ",melhor_modelo.weights)
 
-"""**Aplicando o melhor modelo sobre o conjunto de teste**"""
+#**Aplicando o melhor modelo sobre o conjunto de teste**
 
 print("\n\nDesempenho sobre o conjunto de teste")
 opiniao = melhor_modelo.predict(x_teste)
-print("\nK: ",melhor_modelo.n_neighbors," mae sobre o teste: ",mean_absolute_error(y_teste, opiniao))
+mae_knn = mean_absolute_error(y_teste, opiniao)
+print("\nK: ",melhor_modelo.n_neighbors,"\n MAE sobre o teste: ", mae_knn)
+print("R2 Score: ", r2_score(y_teste,opiniao))
 
-"""**ÁRVORE DE DECISÃO**
+melhor_mae = mae_knn
 
-vamos repetir a mesma ideia, aplicando agora um classificador hierárquico
-"""
+#**ÁRVORE DE DECISÃO**
 
+arvore = DecisionTreeRegressor()
 
+parametros_arvore = {
+    'criterion': ['squared_error', 'absolute_error'],
+    'max_features': [None, 'sqrt', 'log2', 0.5],
+    'max_depth': [None, 5, 10, 15, 20],
+    'min_samples_split': [2, 10, 20, 30, 40, 50],
+    'min_samples_leaf': [1, 5, 10, 15, 20, 25, 30],
+}
 
-AD = DecisionTreeRegressor()
-AD.fit(x_treino,y_treino)
-opiniao = AD.predict(x_teste)
-print("MAE com parâmetros default: ",mean_absolute_error(y_teste, opiniao))
+busca = GridSearchCV(
+    estimator=arvore,
+    param_grid=parametros_arvore,
+    scoring='neg_mean_absolute_error',
+    cv=ps, 
+    n_jobs=-1 
+)
 
-"""Aplicando agora valores escolhidos a priori aos hiperparâmetros"""
+busca.fit(x_combined, y_combined)
 
-AD = DecisionTreeRegressor(criterion='absolute_error',max_depth=7,min_samples_leaf=3,min_samples_split=5,splitter='best')
-AD.fit(x_treino,y_treino)
-opiniao = AD.predict(x_teste)
-erro_medio = mean_absolute_error(y_teste, opiniao)
-r2 = r2_score(y_teste, opiniao)
+melhor_arvore = busca.best_estimator_
+print(f"\nMelhores Hiperparâmetros encontrados:\n{busca.best_params_}")
 
-print("Erro Médio = ", erro_medio)
-print("R2 Score = ", r2)
+opiniao = melhor_arvore.predict(x_teste)
 
-"""Explorando diversas combinações de hiperparâmetros usando o GridSearch"""
-
-menormae = 150
-for j in ("absolute_error","poisson"):  #criterion
-  for i in range (5,15):      #max_depth
-    for k in range (20,55):    #min_samples_leaf
-      for l in range (50,100):  #min_samples_split
-        for m in ('best','random'): #splitter
-          AD = DecisionTreeRegressor(criterion=j,max_depth=i,min_samples_leaf=k,min_samples_split=l,splitter=m)
-          AD.fit(x_treino,y_treino)
-          opiniao = AD.predict(x_val)
-          mae = mean_absolute_error(y_teste, opiniao)
-          print("Criterion: ",j," max_depth: ",i," min_samples_leaf: ",k," min_samples_split: ",l," splitter: ",m," mae: ",mae)
-          if (mae < menormae):
-            menormae = mae
-            melhor_modelo = AD
-            print(f"\033[91mmelhorou\033[0m")
-
+erro_arvore = mean_absolute_error(y_teste, opiniao)
+print(f"Erro Médio da Melhor Árvore: {erro_arvore:.2f} pontos de Overall")
 print("\nMelhor configuração para a AD")
-print("Criterion: ",melhor_modelo.criterion," max_depth: ",melhor_modelo.max_depth," min_samples_leaf: ",melhor_modelo.min_samples_leaf," min_samples_split: ",melhor_modelo.min_samples_split," splitter: ",melhor_modelo.splitter," Acc: ",menormae)
+print("Criterion: ",melhor_arvore.criterion," max_depth: ",melhor_arvore.max_depth," min_samples_leaf: ",melhor_arvore.min_samples_leaf," min_sample/s_split: ",melhor_arvore.min_samples_split," splitter: ",melhor_arvore.splitter)
 
-"""Aplicando a melhor configuração sobre o **Conjunto de Teste**"""
+#Aplicando a melhor configuração sobre o **Conjunto de Teste**
 
-opiniao = melhor_modelo.predict(x_teste)
-print("mae sobre o teste: ", mean_absolute_error(y_teste, opiniao))
+opiniao = melhor_arvore.predict(x_teste)
+arvore_mae = mean_absolute_error(y_teste, opiniao)
+print("mae sobre o teste: ", arvore_mae)
+
+if(arvore_mae < melhor_mae):
+    melhor_modelo = opiniao
+    print("Novo melhor modelo é a arvore")
