@@ -15,152 +15,61 @@ import seaborn as sns
 
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, r2_score
 
-df = pd.read_csv('fifa_previsao_ajustado.csv')
-
-plt.figure(figsize=(12, 9))
-
-sns.scatterplot(
-    data=df,
-    x=df.columns[0],
-    y=df.columns[1],
-    hue=df.columns[-1],
-    palette=['red', 'blue']
-)
-
-plt.title('Dispersão das amostras de acordo com as classes originais')
-plt.show()
+df_treino= pd.read_csv('./split/treino.csv')
+df_teste = pd.read_csv('./split/teste.csv')
+df_val= pd.read_csv('./split/validacao.csv')
 
 
-"""Bagunçando os dados e separando os vetores de características das classes"""
+x_treino= df_treino.drop(columns=['overall'])
+y_treino = df_treino['overall']
 
-print(df.head())
+x_teste= df_teste.drop(columns=['overall'])
+y_teste = df_teste['overall']
 
-df = shuffle(df)
+x_val = df_val.drop(columns=['overall'])
+y_val = df_val['overall']
 
-X = df.iloc[:,:-1]
-Y = df.iloc[:,-1]
 
-"""Realizando a divisão entre Treino, Validação e Teste"""
 
-x_treino,x_temp,y_treino,y_temp=train_test_split(X,Y,test_size=0.5,stratify=Y)
-x_validacao,x_teste,y_validacao,y_teste=train_test_split(x_temp,y_temp,test_size=0.5, stratify = y_temp)
+scaler = StandardScaler()
+x_treino = scaler.fit_transform(x_treino)
+x_teste = scaler.transform(x_teste)
+x_val = scaler.transform(x_val)
 
-print("Treino")
-x_treino.info()
-y_treino.info()
-
-print("\nValidação")
-x_validacao.info()
-y_validacao.info()
-
-print("\nTeste")
-x_teste.info()
-y_teste.info()
-
-"""Exemplo mais básico de um KNN"""
-
-KNN = KNeighborsClassifier()
+KNN = KNeighborsRegressor()
 KNN.fit(x_treino,y_treino)
 opiniao = KNN.predict(x_teste)
-print("Acurácia com parâmetros default: ",accuracy_score(y_teste, opiniao))
 
-df_teste = pd.DataFrame(x_teste)
-df_teste['Classe'] = y_teste
-df_teste['Opiniao'] = opiniao  # adiciona a predição
+erro_medio = mean_absolute_error(y_teste, opiniao)
+r2 = r2_score(y_teste, opiniao)
 
-# Criando dois subplots (1 linha, 2 colunas)
-fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+print("Erro Médio = ", erro_medio)
+print("R2 Score = ", r2)
 
-# Gráfico 1 - classes reais
-sns.scatterplot(
-    data=df_teste,
-    x=df_teste.columns[0],
-    y=df_teste.columns[1],
-    hue='Classe',
-    palette=['red', 'blue'],
-    ax=axes[0]
-)
-axes[0].set_title('Classes reais')
 
-# Gráfico 2 - predição do modelo
-sns.scatterplot(
-    data=df_teste,
-    x=df_teste.columns[0],
-    y=df_teste.columns[1],
-    hue='Opiniao',
-    palette=['red', 'blue'],
-    ax=axes[1]
-)
-axes[1].set_title('Predição do classificador')
-
-plt.tight_layout()
-plt.show()
 
 #atribuindo valores aos hiperparâmetros
 #n_neighbors corresponde ao tamanho da vizinhança
 #weights indica se os vizinhos terão pesos diferentes ou não. Pode assumir os valores uniform ou distante (ou callabe)
 
-KNN = KNeighborsClassifier(n_neighbors=11)
+
+KNN = KNeighborsRegressor(n_neighbors=11)
 KNN.fit(x_treino,y_treino)
 opiniao = KNN.predict(x_teste)
-print("Acurácia com parâmetros default: ",accuracy_score(y_teste, opiniao))
+erro_medio = mean_absolute_error(y_teste, opiniao)
+r2 = r2_score(y_teste, opiniao)
 
-"""Aplicando modelos de classificação à base **Vertebral**
+print("Erro Médio = ", erro_medio)
+print("R2 Score = ", r2)
 
-https://archive.ics.uci.edu/dataset/212/vertebral+column
-
-(Normal, Hérnia de Disco, Espondiolistese)
-
-Composta de 310 instâncias
-
-2 Classes:
-
-AB (210 casos) --> classe 1
-
-NO (100 casos) --> classe 2
-
-6 atributos:
-
-pelvic_incidence (float)
-
-pelvic_tilt (float)
-
-lumbar_lordosis_angle (float)
-
-sacral_slope (float)
-
-pelvic_radius (float)
-
-degree_spondylolisthesis (float)
-
-class
-
-
-"""
-
-dados = pd.read_csv("Vertebral.csv")
-dados = shuffle(dados)
-
-print(dados.head())
-
-X = dados.iloc[:,:-1]
-Y = dados.iloc[:,-1]
-
-x_treino,x_temp,y_treino,y_temp=train_test_split(X,Y,test_size=0.5,stratify=Y)
-x_validacao,x_teste,y_validacao,y_teste=train_test_split(x_temp,y_temp,test_size=0.5, stratify = y_temp)
-
-"""**KNN básico com hiperparâmetros com valores default**"""
-
-KNN = KNeighborsClassifier()
-KNN.fit(x_treino,y_treino)
-opiniao = KNN.predict(x_teste)
-print("Acurácia com parâmetros default: ",accuracy_score(y_teste, opiniao))
 
 """**Atribuindo valores aos hiperparâmetros de forma explícita**
 
@@ -169,58 +78,61 @@ n_neighbors corresponde ao tamanho da vizinhança
 weights indica se os vizinhos terão pesos diferentes ou não. Pode assumir os valores uniform ou distante (ou callabe)
 """
 
-KNN = KNeighborsClassifier(n_neighbors=3,weights='distance')
+KNN = KNeighborsRegressor(n_neighbors=3,weights='distance')
 KNN.fit(x_treino,y_treino)
 opiniao = KNN.predict(x_teste)
-print("Acurácia com parâmetros definidos pelo projetista: ",accuracy_score(y_teste, opiniao))
+erro_medio = mean_absolute_error(y_teste, opiniao)
+r2 = r2_score(y_teste, opiniao)
+
+print("Erro Médio = ", erro_medio)
+print("R2 Score = ", r2)
 
 """**Usando a regra do cotovelo para encontrar o melhor K**
 
 Neste processo, emprega-se o conjunto de validação
 """
 
-taxa_de_erro = []
+erro_medio_v = []
 for i in range (1,51):
-  KNN = KNeighborsClassifier(n_neighbors=i,weights="distance")
+  KNN = KNeighborsRegressor(n_neighbors=i,weights="distance")
   KNN.fit(x_treino,y_treino)
-  opiniao = KNN.predict(x_validacao)
-  taxa_de_erro.append(1-accuracy_score(y_validacao, opiniao))
-  print("K: ",i," Acc: ",accuracy_score(y_validacao, opiniao))
+  opiniao = KNN.predict(x_val)
+  erro_medio_v.append(mean_absolute_error(y_val, opiniao))
+  print("K: ",i," mae: ",mean_absolute_error(y_val, opiniao))
 
 print("\n\nVetor de Erros")
-print(taxa_de_erro)
+print(erro_medio_v)
 
 
-melhor_k=np.argmin(taxa_de_erro)+1
+melhor_k=np.argmin(erro_medio_v)
 print("\nMelhor K:", melhor_k,"\n\n")
 
-plt.figure (figsize=(11,7))
-plt.plot(range(1,51),taxa_de_erro,color='blue',linestyle='dashed',marker='o')
-plt.xlabel('K')
-plt.ylabel('Erro')
-plt.show()
-
 #aplica-se o K encontrado em um KNN sobre o conjunto de teste
-KNN = KNeighborsClassifier(n_neighbors=melhor_k,weights="distance")
+KNN = KNeighborsRegressor(n_neighbors=melhor_k,weights="distance")
 KNN.fit(x_treino,y_treino)
 opiniao = KNN.predict(x_teste)
-print(" Acurácia sobre o teste usando k = ",melhor_k,": ",accuracy_score(y_teste, opiniao))
+erro_medio = mean_absolute_error(y_teste, opiniao)
+r2 = r2_score(y_teste, opiniao)
+
+print("Erro Médio = ", erro_medio)
+print("R2 Score = ", r2)
 
 """**Encontrando a melhor configuração de hiperparâmetros**
 
 Neste exemplo, vamos empregar a estratégia de gridsearch
 """
 
-maiorAcc = -1
+menormae = 150
 for j in ("distance","uniform"):
   for i in range (1,51):
-    KNN = KNeighborsClassifier(n_neighbors=i,weights=j)
+    KNN = KNeighborsRegressor(n_neighbors=i,weights=j)
     KNN.fit(x_treino,y_treino)
-    opiniao = KNN.predict(x_validacao)
-    Acc = accuracy_score(y_validacao, opiniao)
-    print("K: ",i," Métrica: ",j," Acc: ",Acc)
-    if (Acc > maiorAcc):
-      maiorAcc = Acc
+    opiniao = KNN.predict(x_teste)
+    mae = mean_absolute_error(y_teste, opiniao)
+
+    print("K: ",i," Métrica: ",j," mae: ",mae)
+    if (mae < menormae):
+      menormae = mae
       melhor_modelo = KNN
       print(f"\033[91mmelhorou\033[0m")
 
@@ -234,51 +146,53 @@ print("Weights: ",melhor_modelo.weights)
 
 print("\n\nDesempenho sobre o conjunto de teste")
 opiniao = melhor_modelo.predict(x_teste)
-print("\nK: ",melhor_modelo.n_neighbors," Acurácia sobre o teste: ",accuracy_score(y_teste, opiniao))
+print("\nK: ",melhor_modelo.n_neighbors," mae sobre o teste: ",mean_absolute_error(y_teste, opiniao))
 
 """**ÁRVORE DE DECISÃO**
 
 vamos repetir a mesma ideia, aplicando agora um classificador hierárquico
 """
 
-x_treino,x_temp,y_treino,y_temp=train_test_split(X,Y,test_size=0.5,stratify=Y)
-x_validacao,x_teste,y_validacao,y_teste=train_test_split(x_temp,y_temp,test_size=0.5, stratify = y_temp)
 
-"""AD com **hiperparâmetros default**"""
 
-AD = DecisionTreeClassifier()
+AD = DecisionTreeRegressor()
 AD.fit(x_treino,y_treino)
 opiniao = AD.predict(x_teste)
-print("Acurácia com parâmetros default: ",accuracy_score(y_teste, opiniao))
+print("MAE com parâmetros default: ",mean_absolute_error(y_teste, opiniao))
 
 """Aplicando agora valores escolhidos a priori aos hiperparâmetros"""
 
-AD = DecisionTreeClassifier(criterion='entropy',max_depth=7,min_samples_leaf=3,min_samples_split=5,splitter='best')
+AD = DecisionTreeRegressor(criterion='absolute_error',max_depth=7,min_samples_leaf=3,min_samples_split=5,splitter='best')
 AD.fit(x_treino,y_treino)
 opiniao = AD.predict(x_teste)
-print("Acurácia com parâmetros default: ",accuracy_score(y_teste, opiniao))
+erro_medio = mean_absolute_error(y_teste, opiniao)
+r2 = r2_score(y_teste, opiniao)
+
+print("Erro Médio = ", erro_medio)
+print("R2 Score = ", r2)
 
 """Explorando diversas combinações de hiperparâmetros usando o GridSearch"""
 
-maior = -1
-for j in ("entropy","gini"):  #criterion
-  for i in range (1,11):      #max_depth
-    for k in range (1,11):    #min_samples_leaf
-      for l in range (2,16):  #min_samples_split
+menormae = 150
+for j in ("absolute_error","poisson"):  #criterion
+  for i in range (5,15):      #max_depth
+    for k in range (20,55):    #min_samples_leaf
+      for l in range (50,100):  #min_samples_split
         for m in ('best','random'): #splitter
-          AD = DecisionTreeClassifier(criterion=j,max_depth=i,min_samples_leaf=k,min_samples_split=l,splitter=m)
+          AD = DecisionTreeRegressor(criterion=j,max_depth=i,min_samples_leaf=k,min_samples_split=l,splitter=m)
           AD.fit(x_treino,y_treino)
-          opiniao = AD.predict(x_validacao)
-          Acc = accuracy_score(y_validacao, opiniao)
-          print("Criterion: ",j," max_depth: ",i," min_samples_leaf: ",k," min_samples_split: ",l," splitter: ",m," Acc: ",Acc)
-          if (Acc > maior):
-            maior = Acc
+          opiniao = AD.predict(x_val)
+          mae = mean_absolute_error(y_teste, opiniao)
+          print("Criterion: ",j," max_depth: ",i," min_samples_leaf: ",k," min_samples_split: ",l," splitter: ",m," mae: ",mae)
+          if (mae < menormae):
+            menormae = mae
             melhor_modelo = AD
+            print(f"\033[91mmelhorou\033[0m")
 
 print("\nMelhor configuração para a AD")
-print("Criterion: ",melhor_modelo.criterion," max_depth: ",melhor_modelo.max_depth," min_samples_leaf: ",melhor_modelo.min_samples_leaf," min_samples_split: ",melhor_modelo.min_samples_split," splitter: ",melhor_modelo.splitter," Acc: ",maior)
+print("Criterion: ",melhor_modelo.criterion," max_depth: ",melhor_modelo.max_depth," min_samples_leaf: ",melhor_modelo.min_samples_leaf," min_samples_split: ",melhor_modelo.min_samples_split," splitter: ",melhor_modelo.splitter," Acc: ",menormae)
 
 """Aplicando a melhor configuração sobre o **Conjunto de Teste**"""
 
 opiniao = melhor_modelo.predict(x_teste)
-print("Acurácia sobre o teste: ",accuracy_score(y_teste, opiniao))
+print("mae sobre o teste: ", mean_absolute_error(y_teste, opiniao))
