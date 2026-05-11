@@ -1,0 +1,8 @@
+Modelo,Melhores_Parametros,MAE_Teste
+KNN,"{'n_neighbors': 13, 'weights': 'distance'}",3.4769433208552236
+Árvore de Decisão,"{'criterion': 'absolute_error', 'max_depth': None, 'min_samples_leaf': 15, 'min_samples_split': 2, 'splitter': 'random'}",3.3475254730713244
+SVM,"{'C': 1, 'kernel': 'linear'}",3.0314572094374346
+MLP,"{'activation': 'relu', 'batch_size': 64, 'hidden_layer_sizes': (64,), 'learning_rate_init': 0.001, 'max_iter': 500}",3.323491760190356
+Random Forest,"{'criterion': 'squared_error', 'max_depth': 20, 'min_samples_leaf': 5, 'min_samples_split': 2, 'n_estimators': 200}",2.7871491426691817
+Bagging,"{'max_samples': 0.5, 'n_estimators': 150}",2.7896603590490052
+Boosting,"{'learning_rate': 0.1, 'n_estimators': 200}",2.6574678832524885
