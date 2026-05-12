@@ -125,9 +125,8 @@ modelos_config = {
     )
 }
 
-# ==========================================
-# 3. SISTEMA DE CHECKPOINT E EXECUÇÃO
-# ==========================================
+# SISTEMA DE CHECKPOINT E EXECUÇÃO
+
 arquivo_resultados = 'resultados_modelos.csv'
 modelos_concluidos = []
 
@@ -154,7 +153,6 @@ for nome_modelo, (estimador, param_grid) in modelos_config.items():
 
     print(f"\nTreinando {nome_modelo}...")
     
-    # Lógica para modelos com GridSearch
     if param_grid:
         grid = GridSearchCV(estimador, param_grid, cv=ps, n_jobs=-1, scoring='neg_mean_absolute_error')
         grid.fit(x_combined, y_combined)
@@ -172,9 +170,8 @@ for nome_modelo, (estimador, param_grid) in modelos_config.items():
     novo_resultado = pd.DataFrame([{'Modelo': nome_modelo, 'Melhores_Parametros': melhores_params, 'MAE_Teste': mae_teste}])
     novo_resultado.to_csv(arquivo_resultados, mode='a', header=False, index=False)
 
-# ==========================================
-# 4. RESULTADO FINAL
-# ==========================================
+# RESULTADO FINAL
+
 print("\n" + "="*50)
 print("TODOS OS TESTES FORAM CONCLUÍDOS COM SUCESSO!")
 print("="*50)
