@@ -1,17 +1,9 @@
+Estimadores no gridsearch de bagging e boosting
+Arrumar variações de parametros
 
+Combinacao de estimadores por média de resultados
 
-val - testar hyperparam
-teste no melhor val
-
-
-knn
-nbayes
-mlp
-svm
-ad
-
-melhores - teoria
-rforest
-bagging
-boosting
-
+Testes estatisticos
+    Rodar 20x
+    Salvar cada resultado em csv
+    

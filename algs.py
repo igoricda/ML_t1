@@ -49,7 +49,7 @@ modelos_config = {
     "KNN": (
         KNeighborsRegressor(), 
         {
-            'n_neighbors': [i for i in range(5, 31)], 
+            'n_neighbors': [i for i in range(1, 31)], 
             'weights': ['uniform', 'distance']
         }
     ),
@@ -88,7 +88,9 @@ modelos_config = {
             
             'activation': ['relu'], 
             
-            'batch_size': [64, 128]
+            'batch_size': [64, 128],
+
+            #Quantidade de camadas (1, 2, 3)
         }
     ),
     "Random Forest": (
@@ -111,7 +113,8 @@ modelos_config = {
             # [10, 50, 100, 150]
             'n_estimators': [10] + [i * 50 for i in range(1, 4)], 
             # [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-            'max_samples': [i / 10 for i in range(5, 11)]
+            'max_samples': [i / 10 for i in range(5, 11)],
+            #estimadores
         }
     ),
     "Boosting": (
@@ -120,10 +123,13 @@ modelos_config = {
             # [50, 100, 150, 200]
             'n_estimators': [i * 50 for i in range(1, 5)], 
             #  [0.1, 0.01, 0.2]
-            'learning_rate': [10**(-i) for i in range(1, 3)] + [0.2]
+            'learning_rate': [10**(-i) for i in range(1, 3)] + [0.2],
+            #estimators - knn, mlp
         }
     )
 }
+
+#
 
 # SISTEMA DE CHECKPOINT E EXECUÇÃO
 
@@ -166,7 +172,7 @@ for nome_modelo, (estimador, param_grid) in modelos_config.items():
     
     print(f"{nome_modelo} concluído! MAE: {mae_teste:.4f} | Params: {melhores_params}")
 
-    # SALVAR PROGRESSO: Adiciona o resultado no final do arquivo CSV imediatamente (mode='a' é append)
+    # SALVAR PROGRESSO
     novo_resultado = pd.DataFrame([{'Modelo': nome_modelo, 'Melhores_Parametros': melhores_params, 'MAE_Teste': mae_teste}])
     novo_resultado.to_csv(arquivo_resultados, mode='a', header=False, index=False)
 
